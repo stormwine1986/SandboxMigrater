@@ -42,7 +42,7 @@ public class MainFrame extends JFrame implements ActionListener {
 	private JLabel selectHomeLabel;
 	private JButton migrateBtn;
 	
-	private Version selectedVersion = new Version("12.3.1.0", 1, 12);
+	private Version selectedVersion = null;
 	private String homeDir;
 	private String oldDataSetDir;
 
@@ -71,11 +71,10 @@ public class MainFrame extends JFrame implements ActionListener {
 		JLabel label = new JLabel(" 目标版本 ");
 		jp.add(label);
 		versionSelection = new JComboBox<Version>();
-		// versionSelection.addItem(new Version("--请选择--", -1, -1));
+		versionSelection.addItem(new Version("--请选择--", -1, -1));
 		versionSelection.addItem(new Version("12.3.1.0", 1, 12));
-		// versionSelection.addItem(new Version("10.9", 1, 11));
+		versionSelection.addItem(new Version("10.9", 1, 11));
         jp.add(versionSelection);
-        versionSelection.setEnabled(false);
         add(jp, BorderLayout.NORTH);
         versionSelectionButton = new JButton("确定");
         versionSelectionButton.addActionListener(this);
@@ -113,10 +112,6 @@ public class MainFrame extends JFrame implements ActionListener {
 	}
 
 	private void clickMigrateBtn(ActionEvent e) throws Exception {
-		table.freeze();
-		selectHomeBtn.setEnabled(false);
-		migrateBtn.setEnabled(false);
-		migrateVScb.setEnabled(false);
 		int opt = JOptionPane.showConfirmDialog(
 					this,
 			    	"确认要进行沙箱迁移？确认点击【是】，再想想点击【否】", "确认信息",
@@ -153,11 +148,6 @@ public class MainFrame extends JFrame implements ActionListener {
 				// 迁移过程有异常
 				throw new IllegalStateException(migrateException);
 			}
-		} else {
-			table.active();
-			selectHomeBtn.setEnabled(true);
-			migrateBtn.setEnabled(true);
-			migrateVScb.setEnabled(true);
 		}
 	}
 
