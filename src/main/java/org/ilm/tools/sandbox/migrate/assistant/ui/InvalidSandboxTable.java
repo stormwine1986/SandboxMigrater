@@ -20,16 +20,22 @@ public class InvalidSandboxTable extends JTable implements MouseListener {
 	
 	public static InvalidSandboxTable getInstance(List<Sandbox> invalidSandbox) {
 		Object[] columns={"原来的位置","新的位置"};
-		Object[][] data= new Object[invalidSandbox.size()][1];
+		Object[][] data= new Object[getTopSize(invalidSandbox)][1];
 		
 		for(int i = 0; i < invalidSandbox.size(); i++) {
 			Sandbox sd = invalidSandbox.get(i);
-			data[i][0] = sd.getFolder();
+			if(sd.isTop()) {
+				data[i][0] = sd.getFolder();
+			}
 		}
 		
 		DefaultTableModel model=new DefaultTableModel(data, columns);
 		
 		return new InvalidSandboxTable(model, invalidSandbox);
+	}
+
+	private static int getTopSize(List<Sandbox> invalidSandbox) {
+		return (int) invalidSandbox.stream().filter(sd -> sd.isTop()).count();
 	}
 
 	private List<Sandbox> invalidSandbox;
@@ -62,6 +68,7 @@ public class InvalidSandboxTable extends JTable implements MouseListener {
 					Sandbox sandbox = invalidSandbox.get(row);
 					sandbox.setNewFolderPath(newFolder);
 					if(isTop(sandbox)) {
+						// 如果是Top项目，需要自动填充子项目路径
 						List<Sandbox> subSandboxes = getSubSandbox(sandbox);
 						autoFillNewFolder(subSandboxes, sandbox, newFolder);
 					}
@@ -73,11 +80,9 @@ public class InvalidSandboxTable extends JTable implements MouseListener {
 	private void autoFillNewFolder(List<Sandbox> subSandboxes, Sandbox topSandbox, String newTopFolder) {
 		String topFolder = topSandbox.getFolder();
 		for(Sandbox sd :subSandboxes) {
-			int row = invalidSandbox.indexOf(sd);
 			String subfolder = sd.getFolder();
 			if(subfolder.startsWith(topFolder)) {
 				String newSubFoler = formatPath(subfolder.replace(topFolder, newTopFolder));
-				setValueAt(newSubFoler, row, 1);
 				sd.setNewFolderPath(newSubFoler);
 			}
 		}
