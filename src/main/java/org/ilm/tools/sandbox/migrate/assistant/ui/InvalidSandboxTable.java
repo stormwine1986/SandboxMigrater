@@ -17,16 +17,16 @@ import org.ilm.tools.sandbox.migrate.assistant.model.Sandbox;
 public class InvalidSandboxTable extends JTable implements MouseListener {
 
 	private static final long serialVersionUID = 1L;
+	private static List<Sandbox> tops = new LinkedList<Sandbox>();
 	
 	public static InvalidSandboxTable getInstance(List<Sandbox> invalidSandbox) {
 		Object[] columns={"原来的位置","新的位置"};
-		Object[][] data= new Object[getTopSize(invalidSandbox)][1];
+		tops = getTopSandbox(invalidSandbox);
+		Object[][] data= new Object[tops.size()][1];
 		
-		for(int i = 0; i < invalidSandbox.size(); i++) {
-			Sandbox sd = invalidSandbox.get(i);
-			if(sd.isTop()) {
-				data[i][0] = sd.getFolder();
-			}
+		for(int i = 0; i < tops.size(); i++) {
+			Sandbox sd = tops.get(i);
+			data[i][0] = sd.getFolder();
 		}
 		
 		DefaultTableModel model=new DefaultTableModel(data, columns);
@@ -34,8 +34,8 @@ public class InvalidSandboxTable extends JTable implements MouseListener {
 		return new InvalidSandboxTable(model, invalidSandbox);
 	}
 
-	private static int getTopSize(List<Sandbox> invalidSandbox) {
-		return (int) invalidSandbox.stream().filter(sd -> sd.isTop()).count();
+	private static List<Sandbox> getTopSandbox(List<Sandbox> invalidSandbox) {
+		return invalidSandbox.stream().filter(sd -> sd.isTop()).collect(Collectors.toList());
 	}
 
 	private List<Sandbox> invalidSandbox;
@@ -65,9 +65,9 @@ public class InvalidSandboxTable extends JTable implements MouseListener {
 				if(opt == JFileChooser.APPROVE_OPTION) {
 					String newFolder = formatPath(chooser.getSelectedFile().getAbsolutePath());
 					setValueAt(newFolder, row, column);
-					Sandbox sandbox = invalidSandbox.get(row);
+					Sandbox sandbox = tops.get(row);
 					sandbox.setNewFolderPath(newFolder);
-					if(isTop(sandbox)) {
+					if(sandbox.isTop()) {
 						// 如果是Top项目，需要自动填充子项目路径
 						List<Sandbox> subSandboxes = getSubSandbox(sandbox);
 						autoFillNewFolder(subSandboxes, sandbox, newFolder);
@@ -91,10 +91,6 @@ public class InvalidSandboxTable extends JTable implements MouseListener {
 	private List<Sandbox> getSubSandbox(Sandbox sandbox) {
 		final Integer id = sandbox.getId();
 		return invalidSandbox.stream().filter(sd -> id.equals(sd.getTopId())).collect(Collectors.toList());
-	}
-
-	private boolean isTop(Sandbox sandbox) {
-		return sandbox.getTopId() == null;
 	}
 	
 	private static String formatPath(String path) {
